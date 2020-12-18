@@ -26,5 +26,11 @@
     <None Include="readme.md">
       <Filter>源文件</Filter>
     </None>
+    <None Include="3.3.shader.vs">
+      <Filter>源文件</Filter>
+    </None>
+    <None Include="3.3.shader.fs">
+      <Filter>源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

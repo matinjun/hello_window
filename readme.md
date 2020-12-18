@@ -148,3 +148,24 @@ glBindVertexArray(0);
 4. 通过VBO传送数据到GPU，并描述，使用VAO分离不同的数据
 5. 循环渲染
 6. 释放
+
+## shader精细解答
+1. in, out, uniform
+    - in: 从外部输入的数据，每个从外部输入的数据都有位置索引，可以通过layout显示指定，或是通过函数询问获得位置索引
+    - out: 输出到下一级流水线的数据，其中frag shader必须输出一个四维颜色向量，vertex shader必须有一个输入，并且要输出到gl_Position_
+    - uniform: 全局，一定义就可以通过在渲染循环中传递值，从而动态改变点或数据
+```c++
+// update the uniform color
+float timeValue = glfwGetTime();
+float greenValue = sin(timeValue) / 2.0f + 0.5f;
+// 获得索引
+int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+// now render the triangle
+glBindVertexArray(VAO); // 选择要绘制的VAO
+glDrawArrays(GL_TRIANGLES, 0, 3); // 绘制
+
+```
+- in, out在不同的shader有相同的名字时可以相互调用（注意顺序，先out后in），即相当于同一个变量
+- glVertexAttribPointer()中第一个参数就是指在shader中的索引，倒数第二个指每次shader读取的长度

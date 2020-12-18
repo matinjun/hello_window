@@ -149,6 +149,7 @@ glBindVertexArray(0);
 5. 循环渲染
 6. 释放
 
+
 ## shader精细解答
 1. in, out, uniform
     - in: 从外部输入的数据，每个从外部输入的数据都有位置索引，可以通过layout显示指定，或是通过函数询问获得位置索引
@@ -169,3 +170,16 @@ glDrawArrays(GL_TRIANGLES, 0, 3); // 绘制
 ```
 - in, out在不同的shader有相同的名字时可以相互调用（注意顺序，先out后in），即相当于同一个变量
 - glVertexAttribPointer()中第一个参数就是指在shader中的索引，倒数第二个指每次shader读取的长度
+
+## 纹理
+1. 纹理坐标是从[0, 1]超出范围有几种处理方法
+    - GL_REPEAT
+    - GL_MIRRORED_REPEAT
+    - GL_CLAMP_TO_EDGE
+    - GL_CLAMP_TO_BORDER
+    具体参考[learnopengl](https://learnopengl.com/Getting-started/Textures)
+2. 纹理采样
+    - GL_NEAREST 取最靠近纹理标架的采样
+    - GL_LINEAR 取靠近纹理标架的线性平均
+3. Mipmaps，对于远距离的采样，为了不浪费cache，需要使用mipmap确保远处物体纹理渲染强度小
+    - 使用mipmap时，就别使用放大滤波选项，因为mipmap本身就是2倍减小的一系列纹理

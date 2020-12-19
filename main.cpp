@@ -2,6 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <learnopengl/shader_s.h>
 
 #include <iostream>
@@ -158,11 +162,29 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture[1]);
-        //
+        // 调整颜色
         float timeValue = glfwGetTime();
         float mixValue = sin(timeValue) / 2.0f + 0.5f;
         ourShader.setFloat("mixValue", mixValue);
-        // render container
+
+        // ------------------------
+        // 变化，视角，投影矩阵
+        glm::mat4 model(1.0f);
+        // 注意，旋转轴必须是单位向量
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 view(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 projection(1.0f);
+        projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        int modelLoc, viewLoc;
+        modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        viewLoc = glGetUniformLocation(ourShader.ID, "view");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        ourShader.setMat4("projection", projection); // 另一种更方便的方式
+
+
+        // 绘制
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

@@ -178,8 +178,69 @@ glDrawArrays(GL_TRIANGLES, 0, 3); // 绘制
     - GL_CLAMP_TO_EDGE
     - GL_CLAMP_TO_BORDER
     具体参考[learnopengl](https://learnopengl.com/Getting-started/Textures)
-2. 纹理采样
+2. 纹理采样(texture wrapping)
     - GL_NEAREST 取最靠近纹理标架的采样
     - GL_LINEAR 取靠近纹理标架的线性平均
-3. Mipmaps，对于远距离的采样，为了不浪费cache，需要使用mipmap确保远处物体纹理渲染强度小
+3. Mipmaps，对于远距离的采样，为了不浪费cache，需要使用mipmap确保远处物体纹理渲染强度小(filter)
     - 使用mipmap时，就别使用放大滤波选项，因为mipmap本身就是2倍减小的一系列纹理
+4. 生成纹理对象与绑定产生图片
+```c++
+    // load and create a texture 
+    // -------------------------
+    unsigned int texture[2];
+    glGenTextures(2, texture);
+    glBindTexture(GL_TEXTURE_2D, texture[0]); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+    unsigned char* data = stbi_load("resources/textures/container.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        // 对于倒数第三个参数，如果是png图片，参数应该是GL_RGBA，因为.png格式有透明度
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    [...]
+```
+5. shader.fs
+```c
+#version 330 core
+
+out vec4 FragColor;
+
+in vec3 ourColor;
+in vec2 TexCoord;
+
+// texture sampler
+uniform sampler2D texturel;
+uniform sampler2D texture2;
+
+void main()
+{
+	FragColor = mix(texture(texturel, TexCoord), texture(texture2, TexCoord), 0.2) * vec4(ourColor, 1.0);
+}
+```
+此时，在main文件通过相应的函数获得texture1，texture2在shader中的索引，并分别绑定纹理对象
+注意，opengl至少可以支持16个纹理对象，GL_TEXTURE0 --- GL_TEXTURE15
+```c++
+ourShader.use(); // don't forget to activate the shader before setting uniforms!  
+glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0); // set it manually
+ourShader.setInt("texture2", 1); // or with shader class
+// bind Texture
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, texture[0]);
+glActiveTexture(GL_TEXTURE1);
+glBindTexture(GL_TEXTURE_2D, texture[1]);
+```
